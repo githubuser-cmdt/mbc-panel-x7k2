@@ -68,6 +68,7 @@
     <label>Email</label><input class="f" id="lEmail" type="email" autocomplete="username" required>
     <label>Password</label><input class="f" id="lPass" type="password" autocomplete="current-password" required>
     <button class="btn primary block" style="margin-top:18px" id="lBtn" type="submit">Login</button>
+    <p id="lErr" class="note" style="color:#ff6b6b;font-size:.85rem" hidden></p>
   </form>
 </div>
 
@@ -160,8 +161,23 @@ function init(){
 $("#loginForm").addEventListener("submit", async e=>{
   e.preventDefault();
   const b=$("#lBtn"); b.disabled=true; b.textContent="Logging in…";
+  $("#lErr").hidden = true;
   try{ await signInWithEmailAndPassword(auth, $("#lEmail").value.trim(), $("#lPass").value); }
-  catch(err){ toast("Login failed – check email and password"); }
+  catch(err){
+    const m = {
+      "auth/invalid-credential":"Email ya password galat hai.",
+      "auth/wrong-password":"Password galat hai.",
+      "auth/user-not-found":"Is email ka user Firebase Authentication mein nahi bana hai.",
+      "auth/invalid-email":"Email sahi format mein likho.",
+      "auth/operation-not-allowed":"Firebase mein Email/Password sign-in ON nahi hai.",
+      "auth/too-many-requests":"Bahut zyada try ho gaye. Thodi der baad try karo.",
+      "auth/network-request-failed":"Internet check karo.",
+      "auth/invalid-api-key":"apiKey galat hai (admin.html ka FIREBASE_CONFIG check karo).",
+      "auth/api-key-not-valid.-please-pass-a-valid-api-key.":"apiKey galat hai (admin.html ka FIREBASE_CONFIG check karo).",
+      "auth/unauthorized-domain":"Ye website Firebase ke Authorized domains mein add nahi hai."
+    }[err.code] || "Login nahi hua.";
+    const e = $("#lErr"); e.textContent = m + "  [" + (err.code || err.message) + "]"; e.hidden = false;
+  }
   b.disabled=false; b.textContent="Login";
 });
 $("#logoutBtn").onclick = ()=>signOut(auth);
