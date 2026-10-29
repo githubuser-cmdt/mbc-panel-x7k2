@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
-<title>PageVault Admin</title>
+<title>MyBooks Admin</title>
 <style>
   :root{--bg:#0f1220;--bg2:#171b2e;--card:#1c2138;--text:#eef0f8;--muted:#9aa1bd;--brand:#6c5ce7;--ok:#2ecc71;--wa:#25D366;--danger:#ff6b6b}
   *{box-sizing:border-box;margin:0;padding:0}
@@ -64,7 +64,7 @@
 
 <div id="login" class="wrap" hidden>
   <form class="box center" id="loginForm">
-    <h1>Admin login</h1><p class="sub">PageVault store management</p>
+    <h1>Admin login</h1><p class="sub">MyBooks store management</p>
     <label>Email</label><input class="f" id="lEmail" type="email" autocomplete="username" required>
     <label>Password</label><input class="f" id="lPass" type="password" autocomplete="current-password" required>
     <button class="btn primary block" style="margin-top:18px" id="lBtn" type="submit">Login</button>
@@ -74,7 +74,7 @@
 
 <div id="app" class="wrap" hidden>
   <div class="top">
-    <h1>Page<span>Vault</span> Admin</h1>
+    <h1>My<span>Books</span> Admin</h1>
     <div style="display:flex;gap:8px">
       <button class="btn primary" id="addBtn">+ Add PDF</button>
       <button class="btn ghost" id="logoutBtn">Logout</button>
@@ -137,7 +137,7 @@ const FIREBASE_CONFIG = {
   appId: "1:812127995663:web:169687a8d97cc1db9a207a"
 };
 const CFG = {
-  STORE_NAME: "PageVault",
+  STORE_NAME: "MyBooks",
   USE_STORAGE: false,   // true = allow direct PDF upload (needs Firebase Storage, which requires the pay-as-you-go "Blaze" plan)
   MAX_MB: 50
 };
