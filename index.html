@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>PageVault Admin</title>
+<style>
+  :root{--bg:#0f1220;--bg2:#171b2e;--card:#1c2138;--text:#eef0f8;--muted:#9aa1bd;--brand:#6c5ce7;--ok:#2ecc71;--wa:#25D366;--danger:#ff6b6b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  [hidden]{display:none!important}
+  body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh}
+  button{font:inherit;cursor:pointer;border:0}
+  .wrap{width:min(860px,100% - 28px);margin-inline:auto;padding:20px 0 60px}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .top h1{font-size:1.3rem}.top h1 span{color:#b9b0ff}
+  .btn{padding:11px 18px;border-radius:10px;font-weight:600;font-size:.92rem}
+  .primary{background:var(--brand);color:#fff}
+  .ghost{background:transparent;color:var(--text);border:1px solid #ffffff2a}
+  .block{width:100%}
+  .box{background:var(--bg2);border:1px solid #ffffff12;border-radius:16px;padding:24px}
+  .center{max-width:400px;margin:12vh auto 0}
+  .center h1{margin-bottom:4px}.sub{color:var(--muted);font-size:.9rem;margin-bottom:12px}
+  label{display:block;font-size:.84rem;color:var(--muted);margin:12px 0 6px}
+  .f{width:100%;background:var(--bg);color:var(--text);border:1px solid #ffffff22;border-radius:10px;padding:12px;font:inherit;outline:none}
+  .f:focus{border-color:var(--brand)}
+  textarea.f{min-height:76px;resize:vertical}
+  input[type=color].f{padding:4px;height:46px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .stats{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .stat{background:var(--bg2);border:1px solid #ffffff12;border-radius:12px;padding:10px 16px;font-size:.85rem;color:var(--muted)}
+  .stat b{display:block;color:var(--text);font-size:1.2rem}
+  .item{background:var(--card);border:1px solid #ffffff10;border-radius:14px;padding:14px;margin-bottom:12px}
+  .item-head{display:flex;gap:12px;align-items:center}
+  .th{width:52px;height:52px;border-radius:12px;display:grid;place-items:center;font-size:1.6rem;flex:none}
+  .item-head .info{min-width:0;flex:1}
+  .item-head b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item-head small{color:var(--muted)}
+  .tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+  .tag{font-size:.72rem;padding:3px 10px;border-radius:999px;background:#ffffff12;color:var(--muted)}
+  .tag.ok{background:#2ecc7122;color:var(--ok)}.tag.bad{background:#ff6b6b22;color:var(--danger)}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .acts button{padding:8px 12px;border-radius:9px;font-size:.82rem;font-weight:600;background:#ffffff10;color:var(--text)}
+  .acts .wa{background:var(--wa);color:#06240f}
+  .acts .del{color:var(--danger)}
+  .empty{text-align:center;color:var(--muted);padding:40px 0}
+  .modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:14px;z-index:20}
+  .modal .box{width:min(520px,100%);max-height:92vh;overflow:auto}
+  .modal h2{margin-bottom:4px}
+  .chk{display:flex;gap:8px;align-items:center;margin-top:14px;font-size:.9rem}
+  .note{font-size:.78rem;color:var(--muted);margin-top:8px}
+  .or{text-align:center;color:var(--muted);font-size:.8rem;margin-top:10px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,80px);background:#222842;border:1px solid #ffffff22;padding:12px 20px;border-radius:12px;z-index:50;transition:.3s;opacity:0;max-width:90vw;text-align:center}
+  .toast.show{transform:translate(-50%,0);opacity:1}
+  code{background:#ffffff14;padding:2px 6px;border-radius:6px;font-size:.85em}
+</style>
+</head>
+<body>
+
+<div id="setup" class="wrap" hidden>
+  <div class="box center"><h1>Setup needed</h1>
+    <p class="sub">Open <code>admin.html</code> and paste your Firebase config into <code>FIREBASE_CONFIG</code> at the top of the script. Then reload.</p></div>
+</div>
+
+<div id="login" class="wrap" hidden>
+  <form class="box center" id="loginForm">
+    <h1>Admin login</h1><p class="sub">PageVault store management</p>
+    <label>Email</label><input class="f" id="lEmail" type="email" autocomplete="username" required>
+    <label>Password</label><input class="f" id="lPass" type="password" autocomplete="current-password" required>
+    <button class="btn primary block" style="margin-top:18px" id="lBtn" type="submit">Login</button>
+  </form>
+</div>
+
+<div id="app" class="wrap" hidden>
+  <div class="top">
+    <h1>Page<span>Vault</span> Admin</h1>
+    <div style="display:flex;gap:8px">
+      <button class="btn primary" id="addBtn">+ Add PDF</button>
+      <button class="btn ghost" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div id="list"></div>
+</div>
+
+<div class="modal" id="modal" hidden>
+  <form class="box" id="pForm">
+    <h2 id="mTitle">Add PDF</h2><p class="sub">Shown on your store right after saving.</p>
+    <label>Title *</label><input class="f" id="pTitle" required>
+    <div class="row2">
+      <div><label>Category</label><input class="f" id="pCat" list="cats" placeholder="e.g. Exam Prep"><datalist id="cats"></datalist></div>
+      <div><label>Pages</label><input class="f" id="pPages" type="number" min="0"></div>
+    </div>
+    <div class="row2">
+      <div><label>Price (₹) *</label><input class="f" id="pPrice" type="number" min="0" step="1" required></div>
+      <div><label>Old price (₹)</label><input class="f" id="pOld" type="number" min="0" step="1"></div>
+    </div>
+    <div class="row2">
+      <div><label>Emoji icon</label><input class="f" id="pEmoji" maxlength="4" value="📄"></div>
+      <div><label>Cover colour</label><input class="f" id="pColor" type="color" value="#6c5ce7"></div>
+    </div>
+    <label>Description</label><textarea class="f" id="pDesc"></textarea>
+
+    <label>PDF link (Google Drive, Dropbox, etc.)</label>
+    <input class="f" id="pLink" type="url" placeholder="https://drive.google.com/file/d/…/view">
+    <p class="note">In Google Drive: upload the PDF → Share → “Anyone with the link”. This link is private to you – customers never see it on the store.</p>
+    <div id="uploadBox" hidden>
+      <p class="or">— or upload a file —</p>
+      <input class="f" id="pFile" type="file" accept="application/pdf,.pdf" style="margin-top:8px">
+    </div>
+
+    <label class="chk"><input type="checkbox" id="pActive" checked> Show on store</label>
+    <div class="row2" style="margin-top:18px">
+      <button class="btn ghost" type="button" id="cancelBtn">Cancel</button>
+      <button class="btn primary" type="submit" id="saveBtn">Save</button>
+    </div>
+  </form>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getFirestore, collection, getDocs, addDoc, setDoc, updateDoc, deleteDoc, doc, query, orderBy} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js";
+
+/* =========================================================
+   CONFIG – paste your Firebase web app config
+   (Firebase console → Project settings → Your apps → Web app → Config)
+   ========================================================= */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBz7MWEEqWFiuSH8vCerZPrzlgmJfmDPb0",
+  authDomain: "mybookscart-93a68.firebaseapp.com",
+  projectId: "mybookscart-93a68",
+  storageBucket: "mybookscart-93a68.firebasestorage.app",
+  appId: "1:812127995663:web:169687a8d97cc1db9a207a"
+};
+const CFG = {
+  STORE_NAME: "PageVault",
+  USE_STORAGE: false,   // true = allow direct PDF upload (needs Firebase Storage, which requires the pay-as-you-go "Blaze" plan)
+  MAX_MB: 50
+};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = n => "₹" + Number(n).toLocaleString("en-IN");
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("show"),2800); }
+function view(v){ ["setup","login","app"].forEach(x=>$("#"+x).hidden = x!==v); }
+
+let auth, db, storage, items = [], files = {}, editing = null;
+
+/* ---------- init & auth ---------- */
+function init(){
+  if(!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId) return view("setup");
+  const app = initializeApp(FIREBASE_CONFIG);
+  auth = getAuth(app); db = getFirestore(app);
+  if(CFG.USE_STORAGE){ storage = getStorage(app); $("#uploadBox").hidden = false; }
+  onAuthStateChanged(auth, user=>{ if(user){ view("app"); load(); } else view("login"); });
+}
+$("#loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const b=$("#lBtn"); b.disabled=true; b.textContent="Logging in…";
+  try{ await signInWithEmailAndPassword(auth, $("#lEmail").value.trim(), $("#lPass").value); }
+  catch(err){ toast("Login failed – check email and password"); }
+  b.disabled=false; b.textContent="Login";
+});
+$("#logoutBtn").onclick = ()=>signOut(auth);
+
+/* ---------- list ---------- */
+async function load(){
+  try{
+    const ps = await getDocs(query(collection(db,"products"), orderBy("createdAt","desc")));
+    items = ps.docs.map(d=>({id:d.id, ...d.data()}));
+    const fs = await getDocs(collection(db,"private_files"));
+    files = {}; fs.forEach(d=>{ files[d.id] = d.data(); });
+    render();
+  }catch(err){
+    $("#list").innerHTML = `<div class="empty">Could not load: ${esc(err.message)}<br><small>Check that your Firestore rules are published and your admin email matches.</small></div>`;
+  }
+}
+const hasFile = p => !!(files[p.id] && files[p.id].url);
+function render(){
+  $("#stats").innerHTML = `<div class="stat"><b>${items.length}</b>Total PDFs</div><div class="stat"><b>${items.filter(p=>p.active).length}</b>Live on store</div><div class="stat"><b>${items.filter(hasFile).length}</b>With file link</div>`;
+  $("#cats").innerHTML = [...new Set(items.map(p=>p.cat).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join("");
+  if(!items.length){ $("#list").innerHTML = `<div class="empty">No PDFs yet. Tap “+ Add PDF”.</div>`; return; }
+  $("#list").innerHTML = items.map(p=>{
+    const has = hasFile(p);
+    return `<div class="item">
+      <div class="item-head"><div class="th" style="background:${esc(p.color||"#6c5ce7")}33">${esc(p.emoji||"📄")}</div>
+        <div class="info"><b>${esc(p.title)}</b><small>${fmt(p.price||0)} · ${esc(p.cat||"General")}</small></div></div>
+      <div class="tags">
+        <span class="tag ${p.active?"ok":"bad"}">${p.active?"Live":"Hidden"}</span>
+        <span class="tag ${has?"ok":"bad"}">${has?"File link added":"No file link"}</span>
+      </div>
+      <div class="acts">
+        ${has?`<button data-act="copy" data-id="${p.id}">🔗 Copy link</button><button class="wa" data-act="wa" data-id="${p.id}">Share on WhatsApp</button>`:""}
+        <button data-act="edit" data-id="${p.id}">Edit</button>
+        <button data-act="toggle" data-id="${p.id}">${p.active?"Hide":"Show"}</button>
+        <button class="del" data-act="del" data-id="${p.id}">Delete</button>
+      </div></div>`;
+  }).join("");
+}
+const find = id => items.find(p=>p.id===id);
+
+$("#list").addEventListener("click", async e=>{
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const p = find(b.dataset.id); if(!p) return;
+  const act = b.dataset.act;
+  try{
+    if(act==="edit") return openForm(p);
+    if(act==="copy"){ const u=files[p.id].url;
+      try{ await navigator.clipboard.writeText(u); toast("Link copied"); }catch(_){ prompt("Copy this link:",u); } return; }
+    if(act==="wa"){
+      const msg=`Thank you for your order from ${CFG.STORE_NAME}! 🎉\n\n*${p.title}*\nDownload your PDF:\n${files[p.id].url}`;
+      window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank"); return; }
+    if(act==="toggle"){ await updateDoc(doc(db,"products",p.id),{active:!p.active}); toast(p.active?"Hidden from store":"Now live"); return load(); }
+    if(act==="del"){
+      if(!confirm(`Delete “${p.title}”? This also removes its file link.`)) return;
+      const f = files[p.id];
+      if(f && f.storagePath && storage){ try{ await deleteObject(ref(storage,f.storagePath)); }catch(_){} }
+      await deleteDoc(doc(db,"private_files",p.id)).catch(()=>{});
+      await deleteDoc(doc(db,"products",p.id));
+      toast("Deleted"); load();
+    }
+  }catch(err){ toast(err.message); }
+});
+
+/* ---------- add / edit form ---------- */
+function openForm(p){
+  editing = p || null;
+  $("#mTitle").textContent = p ? "Edit PDF" : "Add PDF";
+  $("#pTitle").value = p ? p.title : "";
+  $("#pCat").value = p ? (p.cat||"") : "";
+  $("#pPages").value = p && p.pages ? p.pages : "";
+  $("#pPrice").value = p ? p.price : "";
+  $("#pOld").value = p && p.oldPrice ? p.oldPrice : "";
+  $("#pEmoji").value = p ? (p.emoji||"📄") : "📄";
+  $("#pColor").value = p ? (p.color||"#6c5ce7") : "#6c5ce7";
+  $("#pDesc").value = p ? (p.descr||"") : "";
+  $("#pActive").checked = p ? !!p.active : true;
+  $("#pLink").value = p && files[p.id] ? (files[p.id].url||"") : "";
+  if($("#pFile")) $("#pFile").value = "";
+  $("#modal").hidden = false;
+}
+function closeForm(){ $("#modal").hidden = true; editing = null; }
+$("#addBtn").onclick = ()=>openForm(null);
+$("#cancelBtn").onclick = closeForm;
+$("#modal").addEventListener("mousedown", e=>{ if(e.target.id==="modal") closeForm(); });
+
+$("#pForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const price = Number($("#pPrice").value);
+  if($("#pPrice").value==="" || !(price>=0)) return toast("Enter a price");
+  const link = $("#pLink").value.trim();
+  if(link && !/^https?:\/\//i.test(link)) return toast("Link must start with https://");
+  const file = CFG.USE_STORAGE ? $("#pFile").files[0] : null;
+  if(file){
+    if(file.type!=="application/pdf" && !/\.pdf$/i.test(file.name)) return toast("Please choose a PDF file");
+    if(file.size > CFG.MAX_MB*1048576) return toast(`File is larger than ${CFG.MAX_MB} MB`);
+  }
+  const payload = {
+    title:$("#pTitle").value.trim(), cat:$("#pCat").value.trim()||"General",
+    price, oldPrice:Number($("#pOld").value)||0, pages:Number($("#pPages").value)||0,
+    emoji:$("#pEmoji").value.trim()||"📄", color:$("#pColor").value,
+    descr:$("#pDesc").value.trim(), active:$("#pActive").checked
+  };
+  const btn=$("#saveBtn"); btn.disabled=true; btn.textContent = file ? "Uploading…" : "Saving…";
+  try{
+    let id = editing && editing.id;
+    if(id) await updateDoc(doc(db,"products",id), payload);
+    else { const r = await addDoc(collection(db,"products"), {...payload, createdAt:Date.now()}); id = r.id; }
+
+    const old = files[id] || {};
+    let url = link, storagePath = old.storagePath || null;
+    if(file){
+      const path = `pdfs/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g,"_")}`;
+      const task = uploadBytesResumable(ref(storage,path), file, {contentType:"application/pdf"});
+      await new Promise((res,rej)=>task.on("state_changed",
+        s=>{ btn.textContent = "Uploading " + Math.round(s.bytesTransferred/s.totalBytes*100) + "%"; }, rej, res));
+      url = await getDownloadURL(task.snapshot.ref);
+      if(old.storagePath){ try{ await deleteObject(ref(storage,old.storagePath)); }catch(_){} }
+      storagePath = path;
+    } else if(link !== (old.url||"")) {
+      storagePath = null;   // link was replaced or cleared
+    }
+    if(url) await setDoc(doc(db,"private_files",id), {url, storagePath});
+    else if(old.url) await deleteDoc(doc(db,"private_files",id));
+    toast("Saved ✓"); closeForm(); load();
+  }catch(err){ toast(err.message || "Something went wrong"); }
+  btn.disabled=false; btn.textContent="Save";
+});
+
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#modal").hidden) closeForm(); });
+init();
+</script>
+</body>
+</html>
