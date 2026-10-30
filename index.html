@@ -344,4 +344,62 @@ $("#pGallery").addEventListener("change", async e=>{
     catch(err){ toast(err.message); }
   }
 });
-function closeForm(){ $(
+function closeForm(){ $("#modal").hidden = true; editing = null; }
+$("#addBtn").onclick = ()=>openForm(null);
+$("#cancelBtn").onclick = closeForm;
+$("#modal").addEventListener("mousedown", e=>{ if(e.target.id==="modal") closeForm(); });
+
+$("#pForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const price = Number($("#pPrice").value);
+  if($("#pPrice").value==="" || !(price>=0)) return toast("Enter a price");
+  const link = $("#pLink").value.trim();
+  if(link && !/^https?:\/\//i.test(link)) return toast("Link must start with https://");
+  const file = CFG.USE_STORAGE ? $("#pFile").files[0] : null;
+  if(file){
+    if(file.type!=="application/pdf" && !/\.pdf$/i.test(file.name)) return toast("Please choose a PDF file");
+    if(file.size > CFG.MAX_MB*1048576) return toast(`File is larger than ${CFG.MAX_MB} MB`);
+  }
+  const payload = {
+    title:$("#pTitle").value.trim(), cat:$("#pCat").value.trim()||"General",
+    price, oldPrice:Number($("#pOld").value)||0, pages:Number($("#pPages").value)||0,
+    emoji:$("#pEmoji").value.trim()||"📄", color:$("#pColor").value,
+    descr:$("#pDesc").value.trim(), active:$("#pActive").checked
+  };
+  if(newImage) payload.image = newImage;
+  else if(removeImage) payload.image = "";
+  const btn=$("#saveBtn"); btn.disabled=true; btn.textContent = file ? "Uploading…" : "Saving…";
+  try{
+    let id = editing && editing.id;
+    if(id) await updateDoc(doc(db,"products",id), payload);
+    else { const r = await addDoc(collection(db,"products"), {...payload, createdAt:Date.now()}); id = r.id; }
+
+    const old = files[id] || {};
+    let url = link, storagePath = old.storagePath || null;
+    if(file){
+      const path = `pdfs/${id}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g,"_")}`;
+      const task = uploadBytesResumable(ref(storage,path), file, {contentType:"application/pdf"});
+      await new Promise((res,rej)=>task.on("state_changed",
+        s=>{ btn.textContent = "Uploading " + Math.round(s.bytesTransferred/s.totalBytes*100) + "%"; }, rej, res));
+      url = await getDownloadURL(task.snapshot.ref);
+      if(old.storagePath){ try{ await deleteObject(ref(storage,old.storagePath)); }catch(_){} }
+      storagePath = path;
+    } else if(link !== (old.url||"")) {
+      storagePath = null;   // link was replaced or cleared
+    }
+    if(url) await setDoc(doc(db,"private_files",id), {url, storagePath});
+    else if(old.url) await deleteDoc(doc(db,"private_files",id));
+    if(galDirty){
+      if(gal.length) await setDoc(doc(db,"product_gallery",id), {images:gal});
+      else await deleteDoc(doc(db,"product_gallery",id));
+    }
+    toast("Saved ✓"); closeForm(); load();
+  }catch(err){ toast(err.message || "Something went wrong"); }
+  btn.disabled=false; btn.textContent="Save";
+});
+
+document.addEventListener("keydown", e=>{ if(e.key==="Escape" && !$("#modal").hidden) closeForm(); });
+init();
+</script>
+</body>
+</html>
