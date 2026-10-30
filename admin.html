@@ -139,7 +139,6 @@
   </form>
 </div>
 <div class="toast" id="toast"></div>
-
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
@@ -240,9 +239,9 @@ function render(){
       </div></div>`;
   }).join("");
 }
-const find = id => items.find(p=>p.id===id);
 
-$("#list").addEventListener("click", async e=>{
+const find = id => items.find(p=>p.id===id);
+  $("#list").addEventListener("click", async e=>{
   const b = e.target.closest("[data-act]"); if(!b) return;
   const p = find(b.dataset.id); if(!p) return;
   const act = b.dataset.act;
@@ -344,7 +343,7 @@ $("#pGallery").addEventListener("change", async e=>{
     catch(err){ toast(err.message); }
   }
 });
-function closeForm(){ $("#modal").hidden = true; editing = null; }
+  function closeForm(){ $("#modal").hidden = true; editing = null; }
 $("#addBtn").onclick = ()=>openForm(null);
 $("#cancelBtn").onclick = closeForm;
 $("#modal").addEventListener("mousedown", e=>{ if(e.target.id==="modal") closeForm(); });
